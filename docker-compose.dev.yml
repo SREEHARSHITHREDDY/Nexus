@@ -1,0 +1,81 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: nexus_postgres_dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-nexus}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nexus_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-nexus_dev}
+    ports:
+      - "5432:5432"
+    volumes:
+      - nexus_postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/docker/services/postgres.init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexus"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: nexus_redis_dev
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD:-nexus_redis_dev}
+    ports:
+      - "6379:6379"
+    volumes:
+      - nexus_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./services/api
+      dockerfile: Dockerfile.dev
+    container_name: nexus_api_dev
+    restart: unless-stopped
+    env_file: ./services/api/.env.development
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./services/api/src:/app/src
+      - ./packages:/packages
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: npm run start:dev
+
+  ai:
+    build:
+      context: ./services/ai
+      dockerfile: Dockerfile.dev
+    container_name: nexus_ai_dev
+    restart: unless-stopped
+    env_file: ./services/ai/.env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./services/ai/app:/app/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  nexus_postgres_data:
+  nexus_redis_data:
+
+networks:
+  default:
+    name: nexus_network

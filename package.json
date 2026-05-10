@@ -1,0 +1,41 @@
+{
+  "name": "nexus",
+  "version": "0.1.0",
+  "private": true,
+  "description": "NEXUS — Next Gen Execution Universal System",
+  "workspaces": [
+    "apps/*",
+    "services/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "dev:web": "turbo run dev --filter=@nexus/web",
+    "dev:api": "turbo run dev --filter=@nexus/api",
+    "dev:desktop": "turbo run dev --filter=@nexus/desktop",
+    "dev:mobile": "turbo run dev --filter=@nexus/mobile",
+    "build": "turbo run build",
+    "build:web": "turbo run build --filter=@nexus/web",
+    "build:api": "turbo run build --filter=@nexus/api",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\" --ignore-path .gitignore",
+    "docker:dev": "docker compose -f docker-compose.dev.yml up",
+    "docker:prod": "docker compose -f docker-compose.prod.yml up -d",
+    "db:migrate": "cd services/api && npm run db:migrate",
+    "db:seed": "cd services/api && npm run db:seed"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "prettier": "^3.2.0",
+    "@nexus/config": "*"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "packageManager": "npm@10.2.0"
+}
