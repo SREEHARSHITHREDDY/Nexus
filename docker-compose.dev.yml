@@ -13,7 +13,6 @@ services:
       - "5432:5432"
     volumes:
       - nexus_postgres_data:/var/lib/postgresql/data
-      - ./infrastructure/docker/services/postgres.init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U nexus"]
       interval: 10s
@@ -41,7 +40,7 @@ services:
       dockerfile: Dockerfile.dev
     container_name: nexus_api_dev
     restart: unless-stopped
-    env_file: ./services/api/.env.development
+    env_file: ./services/api/.env
     ports:
       - "4000:4000"
     volumes:
